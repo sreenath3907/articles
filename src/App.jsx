@@ -3,9 +3,48 @@ import './App.css'
 import SearchForm from './components/SearchForm.jsx'
 import ParamsPanel from './components/ParamsPanel.jsx'
 import ResultsList from './components/ResultsList.jsx'
+import { searchOpoint } from './services/opointApi.js'
 
 const DEFAULT_TOKEN = '3e52a70ccd7bfa2984dd9e7ad7f55944e9ddb183'
 const DEFAULT_FIELDS = { header: true, summary: true, text: true }
+const FILTERS = [
+  {
+    key: 'basic',
+    label: 'Basic',
+    example: 'spotify',
+    description: 'Match articles mentioning the keyword anywhere in header, summary, or body.'
+  },
+  {
+    key: 'header',
+    label: 'Header-only',
+    example: 'header:spotify',
+    description: 'Focus on articles that highlight the term in the headline.'
+  },
+  {
+    key: 'boolean',
+    label: 'Boolean combo',
+    example: 'spotify AND football',
+    description: 'Combine multiple terms with AND/OR.'
+  },
+  {
+    key: 'frequency',
+    label: 'Frequency',
+    example: 'spotify[3..] AND header:spotify',
+    description: 'Require repetitions and a header mention.'
+  },
+  {
+    key: 'language',
+    label: 'Language filter',
+    example: 'spotify[3..] AND header:spotify AND lang:en',
+    description: 'Layer a language filter on top of frequency.'
+  },
+  {
+    key: 'proximity',
+    label: 'Proximity',
+    example: 'SPAN/5(spotify, football)',
+    description: 'Keep terms within a word window for relevance.'
+  }
+]
 
 const stripHtml = (text = '') => text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 
@@ -58,8 +97,9 @@ const normalizeDocuments = (data) => {
 }
 
 function App() {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [requestedArticles, setRequestedArticles] = useState(10)
+  const [searchTerm, setSearchTerm] = useState(FILTERS[0].example)
+  const [selectedFilterKey, setSelectedFilterKey] = useState(FILTERS[0].key)
+  const [requestedArticles, setRequestedArticles] = useState(20)
   const [fields, setFields] = useState(DEFAULT_FIELDS)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -85,10 +125,12 @@ function App() {
       params: {
         requestedarticles: Math.max(1, Number(requestedArticles) || 1),
         main: {
-          header: 1,
-          summary: 1,
+          matches: true,
+          header: 2,
+          summary: 2,
           text: 1
-        }
+        },
+        textrazor: 15
       }
     }),
     [effectiveSearchTerm, requestedArticles]
@@ -112,6 +154,12 @@ function App() {
 
   const toggleField = (field) => setFields((prev) => ({ ...prev, [field]: !prev[field] }))
 
+  const handleFilterSelect = (filterKey) => {
+    const filter = FILTERS.find((item) => item.key === filterKey)
+    setSelectedFilterKey(filterKey)
+    if (filter) setSearchTerm(filter.example)
+  }
+
   const handleSearch = async (event) => {
     event.preventDefault()
     setError('')
@@ -119,46 +167,27 @@ function App() {
 
     const trimmedTerm = effectiveSearchTerm.trim()
     if (!trimmedTerm) {
-      setError('Please enter a search term before sending.')
-      return
-    }
+    setError('Please enter a search term before sending.')
+    return
+  }
 
-    const trimmedToken = (apiToken || '').trim()
+  const trimmedToken = (apiToken || '').trim()
     if (!trimmedToken) {
       setError('Please add a valid API token before sending.')
       return
     }
 
-    setLoading(true)
-    try {
-      const response = await fetch('/api/search/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `Token ${trimmedToken}`
-        },
-        body: JSON.stringify({ ...requestBody, searchterm: trimmedTerm })
-      })
-
-      if (!response.ok) {
-        const text = await response.text()
-        let message = text || `Request failed with status ${response.status}`
-        try {
-          const parsed = JSON.parse(text)
-          if (parsed?.detail) message = parsed.detail
-        } catch {
-          // keep message as-is
-        }
-        throw new Error(message)
-      }
-
-      const data = await response.json()
-      setResult(data)
-    } catch (fetchError) {
-      setError(fetchError.message || 'Request failed')
-    } finally {
-      setLoading(false)
+  setLoading(true)
+  try {
+    const data = await searchOpoint({
+      token: trimmedToken,
+      body: { ...requestBody, searchterm: trimmedTerm }
+    })
+    setResult(data)
+  } catch (fetchError) {
+    setError(fetchError.message || 'Request failed')
+  } finally {
+    setLoading(false)
     }
   }
 
@@ -170,10 +199,13 @@ function App() {
       </header>
 
       <SearchForm
+        filters={FILTERS}
+        selectedFilterKey={selectedFilterKey}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         onSubmit={handleSearch}
         loading={loading}
+        onSelectFilter={handleFilterSelect}
       />
 
       <ParamsPanel

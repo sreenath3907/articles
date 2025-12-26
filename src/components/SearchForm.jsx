@@ -1,9 +1,11 @@
 import PropTypes from 'prop-types'
 
 function SearchForm({
-  selectedFilter,
+  filters,
+  selectedFilterKey,
   searchTerm,
   setSearchTerm,
+  onSelectFilter,
   onSubmit,
   loading
 }) {
@@ -13,7 +15,7 @@ function SearchForm({
         <div>
           <p className="label">Search</p>
           <h2>Find articles</h2>
-          <p className="subtle">Search by keyword.</p>
+          <p className="subtle">Search by keyword or pick a quick preset.</p>
         </div>
       </div>
 
@@ -31,14 +33,39 @@ function SearchForm({
           {loading ? 'Searching...' : 'Search articles'}
         </button>
       </div>
+
+      {filters?.length > 0 && (
+        <div className="filter-grid">
+          {filters.map((filter) => {
+            const isActive = filter.key === selectedFilterKey
+            return (
+              <button
+                key={filter.key}
+                type="button"
+                className={`filter-card ${isActive ? 'active' : ''}`}
+                onClick={() => onSelectFilter?.(filter.key)}
+              >
+                <div className="filter-title">
+                  <span>{filter.label}</span>
+                  {isActive && <span className="dot" aria-hidden />}
+                </div>
+                <p className="example">{filter.example}</p>
+                <p className="description">{filter.description}</p>
+              </button>
+            )
+          })}
+        </div>
+      )}
     </form>
   )
 }
 
 SearchForm.propTypes = {
-  selectedFilter: PropTypes.object.isRequired,
+  filters: PropTypes.array,
+  selectedFilterKey: PropTypes.string,
   searchTerm: PropTypes.string.isRequired,
   setSearchTerm: PropTypes.func.isRequired,
+  onSelectFilter: PropTypes.func,
   onSubmit: PropTypes.func.isRequired,
   loading: PropTypes.bool.isRequired
 }

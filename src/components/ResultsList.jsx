@@ -115,7 +115,7 @@ function ResultsList({
             <p className="subtle">No documents found in response.</p>
           )}
 
-          {/* <div className="raw-section">
+          <div className="raw-section">
             <div className="raw-header">
               <div>
                 <p className="label">Raw response</p>
@@ -136,7 +136,7 @@ function ResultsList({
                 </pre>
               </div>
             )}
-          </div> */}
+          </div>
         </div>
       )}
     </section>

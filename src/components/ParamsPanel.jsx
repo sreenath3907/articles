@@ -22,6 +22,7 @@ function ParamsPanel({ requestedArticles, setRequestedArticles, fields, toggleFi
             value={requestedArticles}
             onChange={(event) => setRequestedArticles(event.target.value)}
           />
+          <p className="hint">Default is 20; adjust as needed.</p>
         </div>
 
         <div className="control">
