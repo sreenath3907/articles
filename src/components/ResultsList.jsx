@@ -48,10 +48,31 @@ function ResultsList({
             <div className="results-list">
               {documents.map((item, index) => {
                 const expanded = expandedIndex === index
-                const snippet = (item.summary || item.body || '').slice(0, 180)
-                const hasMore = (item.summary || item.body || '').length > 180
+                const summaryText =
+                  typeof item.summary === 'string'
+                    ? item.summary
+                    : Array.isArray(item.summary)
+                      ? item.summary.join(' ')
+                      : typeof item.summary === 'object' && item.summary !== null
+                        ? Object.values(item.summary)
+                            .filter(Boolean)
+                            .join(' ')
+                        : ''
+                const bodyText =
+                  typeof item.body === 'string'
+                    ? item.body
+                    : Array.isArray(item.body)
+                      ? item.body.join(' ')
+                      : typeof item.body === 'object' && item.body !== null
+                        ? Object.values(item.body)
+                            .filter(Boolean)
+                            .join(' ')
+                        : ''
+                const baseText = summaryText || bodyText || ''
+                const snippet = baseText.slice(0, 180)
+                const hasMore = baseText.length > 180
                 const sentences =
-                  item.body
+                  bodyText
                     ?.split(/(?<=[.!?])\s+/)
                     .map((s) => s.trim())
                     .filter(Boolean) || []
@@ -70,9 +91,7 @@ function ResultsList({
                     </div>
 
                     <p className="summary">
-                      {expanded
-                        ? item.summary || item.body || 'No body text'
-                        : `${snippet}${hasMore ? '…' : ''}`}
+                      {expanded ? baseText || 'No body text' : `${snippet}${hasMore ? '…' : ''}`}
                     </p>
 
                     <div className="row-meta">
@@ -93,7 +112,7 @@ function ResultsList({
                       )}
                     </div>
 
-                    {expanded && item.body && (
+                    {expanded && bodyText && (
                       <div className="body-text" onClick={(e) => e.stopPropagation()}>
                         <p className="body-label">Body</p>
                         {sentences.length > 1 ? (
@@ -103,7 +122,7 @@ function ResultsList({
                             ))}
                           </ul>
                         ) : (
-                          <p>{item.body}</p>
+                          <p>{bodyText}</p>
                         )}
                       </div>
                     )}
