@@ -1,6 +1,11 @@
 import PropTypes from 'prop-types'
 
-function ParamsPanel({ requestedArticles, setRequestedArticles, fields, toggleField }) {
+function ParamsPanel({
+  requestedArticles,
+  setRequestedArticles,
+  sourceType,
+  setSourceType
+}) {
   return (
     <section className="panel">
       <div className="panel-header">
@@ -26,20 +31,22 @@ function ParamsPanel({ requestedArticles, setRequestedArticles, fields, toggleFi
         </div>
 
         <div className="control">
-          <label>Field filters</label>
-          <div className="toggle-row">
-            {[
-              { key: 'header', label: 'Header' },
-              { key: 'summary', label: 'Summary' },
-              { key: 'text', label: 'Body' }
-            ].map(({ key, label }) => (
-              <label key={key} className="toggle">
-                <input type="checkbox" checked={fields[key]} onChange={() => toggleField(key)} />
-                <span>{label}</span>
-              </label>
-            ))}
-          </div>
-          <p className="hint">If only one is checked, the search term must appear in that field.</p>
+          <label htmlFor="source-type">Source type</label>
+          <select
+            id="source-type"
+            value={sourceType}
+            onChange={(e) => setSourceType(e.target.value)}
+            className="select"
+          >
+            <option value="all">All</option>
+            <option value="newspaper">Newspaper</option>
+            <option value="broadcast">Broadcast</option>
+            <option value="magazine">Magazine</option>
+            <option value="newsletter">Newsletter</option>
+            <option value="podcast">Podcast</option>
+            <option value="unclassified">Unclassified</option>
+          </select>
+          <p className="hint">Filter displayed results by classification.</p>
         </div>
 
       </div>
@@ -50,8 +57,8 @@ function ParamsPanel({ requestedArticles, setRequestedArticles, fields, toggleFi
 ParamsPanel.propTypes = {
   requestedArticles: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
   setRequestedArticles: PropTypes.func.isRequired,
-  fields: PropTypes.object.isRequired,
-  toggleField: PropTypes.func.isRequired
+  sourceType: PropTypes.string.isRequired,
+  setSourceType: PropTypes.func.isRequired
 }
 
 export default ParamsPanel

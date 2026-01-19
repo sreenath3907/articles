@@ -96,6 +96,7 @@ function ResultsList({
 
                     <div className="row-meta">
                       <div className="tags">
+                        {item.classification && <span className="tag-strong">{item.classification}</span>}
                         {item.language && <span>{item.language}</span>}
                         {item.country && <span>{item.country}</span>}
                       </div>
